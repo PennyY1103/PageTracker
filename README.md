@@ -8,7 +8,7 @@ Currently, the extension is loaded as an unpacked version for personal use, so i
 Driven by the idea of automating the retrieval of Google Sheets files and tabs, I’ve decided to move away from the initial version, which involved hardcoded values. Instead, I’ll focus on developing a new version that automatically fetches available Google Sheets and their corresponding tabs once the user logs into their Google Account. Additionally, the first row of each selected sheet will be automatically extracted and used as column headers for further operations.
 
 ### Demo
-![demo](quicksave_demo_v2.gif)
+![demo](PageTracker_demo_v2.gif)
 
 ### Upcoming Enhancements
 - **New Sheet and Tab Creation**: Add functionality that allows users to create new sheets and tabs directly within the extension.
@@ -18,7 +18,7 @@ Driven by the idea of automating the retrieval of Google Sheets files and tabs, 
 ## Version 1
 
 ### Demo
-![demo](quicksave_demo.gif)
+![demo](PageTracker_demo.gif)
 
 ### Current Core Features
 - **Sheet selection**: Choose from a list of available Google Sheets.

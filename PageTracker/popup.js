@@ -1,22 +1,30 @@
-function showMessage(message, isError = false) {
-    const messageDiv = document.getElementById('message');
-    messageDiv.style.color = isError ? 'red' : 'green'; 
-    messageDiv.innerText = message;
+function ShowMessage(message, isError = false) {
+    const MessageResult = document.getElementById('message');
+    MessageResult.style.color = isError ? 'red' : 'green'; 
+    MessageResult.innerText = message;
 
     setTimeout(() => {
-        messageDiv.innerText = '';
+        MessageResult.innerText = '';
     }, 3000);
 }
 
-function saveSelectedSheetAndTab(sheetId, tabName) {
-    localStorage.setItem('selectedSheet', sheetId);
-    localStorage.setItem('selectedTab', tabName);
+function SaveSelectedSheetAndTab(SheetId, TabName) {
+    localStorage.setItem('selectedSheet', SheetId);
+    localStorage.setItem('selectedTab', TabName);
 }
 
 function loadSelectedSheetAndTab() {
     const savedSheet = localStorage.getItem('selectedSheet');
     const savedTab = localStorage.getItem('selectedTab');
     return { sheet: savedSheet, tab: savedTab };
+}
+
+function clearSheetCaches() {
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('cachedTabs_') || key.startsWith('cachedColumns_')) {
+      localStorage.removeItem(key);
+    }
+  });
 }
 
 function storeInputValues() {
@@ -69,7 +77,7 @@ async function fetchAllSheets(token) {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error fetching sheets: ${response.status} ${response.statusText}\n${errorText}`);
-                showMessage(`Error fetching sheets: ${response.status} ${response.statusText}`, true);
+                ShowMessage(`Error fetching sheets: ${response.status} ${response.statusText}`, true);
                 throw new Error(`Error fetching sheets: ${response.status} ${response.statusText}`);
             }
 
@@ -84,19 +92,19 @@ async function fetchAllSheets(token) {
 
     } catch (error) {
         console.error("Error fetching sheets:", error);
-        showMessage(`Error fetching sheets: ${error.message}`, true);
+        ShowMessage(`Error fetching sheets: ${error.message}`, true);
         return [];
     }
 }
 
-async function fetchAllTabs(token, sheetId) {
-    let cachedTabs = localStorage.getItem(`cachedTabs_${sheetId}`); 
+async function fetchAllTabs(token, SheetId) {
+    let cachedTabs = localStorage.getItem(`cachedTabs_${SheetId}`); 
     if (cachedTabs) {
         return JSON.parse(cachedTabs);
     }
 
     try {
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SheetId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -106,32 +114,32 @@ async function fetchAllTabs(token, sheetId) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Error fetching tabs: ${response.status} ${response.statusText}\n${errorText}`);
-            showMessage(`Error fetching tabs: ${response.status} ${response.statusText}`, true);
+            ShowMessage(`Error fetching tabs: ${response.status} ${response.statusText}`, true);
             throw new Error(`Error fetching tabs: ${response.status} ${response.statusText}`);
         }
 
         const sheetData = await response.json();
         const tabs = sheetData.sheets.map(sheet => sheet.properties.title);
 
-        localStorage.setItem(`cachedTabs_${sheetId}`, JSON.stringify(tabs));
+        localStorage.setItem(`cachedTabs_${SheetId}`, JSON.stringify(tabs));
 
         return tabs;
     } catch (error) {
         console.error("Error fetching tabs:", error);
-        showMessage(`Error fetching tabs: ${error.message}`, true);
+        ShowMessage(`Error fetching tabs: ${error.message}`, true);
         return [];
     }
 }
 
-async function fetchColumns(token, sheetId, tabName) {
-    const cacheKey = `cachedColumns_${sheetId}_${tabName}`;
+async function fetchColumns(token, SheetId, TabName) {
+    const cacheKey = `cachedColumns_${SheetId}_${TabName}`;
     const cachedColumns = localStorage.getItem(cacheKey); 
     if (cachedColumns) {
         return JSON.parse(cachedColumns);
     }
 
     try {
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabName)}!A1:Z1`, {
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SheetId}/values/${encodeURIComponent(TabName)}!A1:Z1`, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -141,7 +149,7 @@ async function fetchColumns(token, sheetId, tabName) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Error fetching columns: ${response.status} ${response.statusText}\n${errorText}`);
-            showMessage(`Error fetching columns: ${response.status} ${response.statusText}`, true);
+            ShowMessage(`Error fetching columns: ${response.status} ${response.statusText}`, true);
             throw new Error(`Error fetching columns: ${response.status} ${response.statusText}`);
         }
 
@@ -155,7 +163,7 @@ async function fetchColumns(token, sheetId, tabName) {
         return columnData.values[0];
     } catch (error) {
         console.error("Error fetching columns:", error);
-        showMessage(`Error fetching columns: ${error.message}`, true);
+        ShowMessage(`Error fetching columns: ${error.message}`, true);
         return [];
     }
 }
@@ -217,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const token = await getOAuthToken(true);
 
             if (!token) {
-                showMessage('Unable to obtain OAuth token', true);
+                ShowMessage('Unable to obtain OAuth token', true);
                 throw new Error('OAuth token not obtained');
             }
 
@@ -234,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (sheets.length === 0) {
                 dropdown.style.display = 'none';
-                showMessage('No Google Sheets files found in your Drive.', true);
+                ShowMessage('No Google Sheets files found in your Drive.', true);
             } else {
                 dropdown.style.display = 'block'; 
                 sheets.forEach(sheet => {
@@ -261,21 +269,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error("Error initializing the page:", error);
-        showMessage(`Error initializing the page: ${error.message}`, true);
+        ShowMessage(`Error initializing the page: ${error.message}`, true);
     }
 });
 
-async function populateTabs(sheetId, savedTab = null) {
+async function populateTabs(SheetId, savedTab = null) {
     try {
         const token = await getOAuthToken(true); 
 
-        const tabs = await fetchAllTabs(token, sheetId);
+        const tabs = await fetchAllTabs(token, SheetId);
         const tabDropdown = document.getElementById('tab-dropdown');
         tabDropdown.innerHTML = ''; 
 
         if (tabs.length === 0) {
             tabDropdown.style.display = 'none';
-            showMessage('No tabs found in the selected sheet.', true);
+            ShowMessage('No tabs found in the selected sheet.', true);
         } else {
             let selectedTab = savedTab || tabs[0]; 
 
@@ -291,55 +299,55 @@ async function populateTabs(sheetId, savedTab = null) {
 
             tabDropdown.style.display = 'block'; 
 
-            const tabName = tabDropdown.value || selectedTab; 
+            const TabName = tabDropdown.value || selectedTab; 
 
-            if (tabName) {
-                const columns = await fetchColumns(token, sheetId, tabName); 
+            if (TabName) {
+                const columns = await fetchColumns(token, SheetId, TabName); 
                 if (columns.length > 0) {
                     updateDataEntrySection(columns); 
                 } else {
-                    showMessage('No columns found in the selected tab.', true);
+                    ShowMessage('No columns found in the selected tab.', true);
                 }
 
-                saveSelectedSheetAndTab(sheetId, tabName); 
+                SaveSelectedSheetAndTab(SheetId, TabName); 
             } else {
-                showMessage('No tab selected.', true);
+                ShowMessage('No tab selected.', true);
             }
         }
     } catch (error) {
         console.error("Error populating tabs:", error);
-        showMessage(`Error populating tabs: ${error.message}`, true);
+        ShowMessage(`Error populating tabs: ${error.message}`, true);
     }
 }
 
 document.getElementById('sheet-list').addEventListener('change', async () => {
-    const sheetId = document.getElementById('sheet-list').value;
-    await populateTabs(sheetId); 
-    saveSelectedSheetAndTab(sheetId, null); 
+    const SheetId = document.getElementById('sheet-list').value;
+    await populateTabs(SheetId); 
+    SaveSelectedSheetAndTab(SheetId, null); 
 });
 
 document.getElementById('tab-dropdown').addEventListener('change', async () => {
     try {
         const token = await getOAuthToken(true); 
-        const sheetId = document.getElementById('sheet-list').value;
-        const tabName = document.getElementById('tab-dropdown').value;
+        const SheetId = document.getElementById('sheet-list').value;
+        const TabName = document.getElementById('tab-dropdown').value;
 
-        if (!sheetId || !tabName) {
-            showMessage('Please select both a sheet and a tab.', true);
+        if (!SheetId || !TabName) {
+            ShowMessage('Please select both a sheet and a tab.', true);
             return;
         }
 
-        saveSelectedSheetAndTab(sheetId, tabName); 
+        SaveSelectedSheetAndTab(SheetId, TabName); 
 
-        const columns = await fetchColumns(token, sheetId, tabName);
+        const columns = await fetchColumns(token, SheetId, TabName);
         if (columns.length > 0) {
             updateDataEntrySection(columns);
         } else {
-            showMessage('No columns found in the selected tab.', true);
+            ShowMessage('No columns found in the selected tab.', true);
         }
     } catch (error) {
         console.error("Error fetching columns:", error);
-        showMessage(`Error fetching columns: ${error.message}`, true);
+        ShowMessage(`Error fetching columns: ${error.message}`, true);
     }
 });
 
@@ -348,26 +356,26 @@ document.getElementById('saveRow').addEventListener('click', async () => {
         const token = await getOAuthToken(true); 
 
         if (!token) {
-            showMessage('Unable to obtain OAuth token', true);
+            ShowMessage('Unable to obtain OAuth token', true);
             throw new Error('OAuth token not obtained');
         }
 
-        const sheetId = document.getElementById('sheet-list').value;
-        const tabName = document.getElementById('tab-dropdown').value;
+        const SheetId = document.getElementById('sheet-list').value;
+        const TabName = document.getElementById('tab-dropdown').value;
         const values = {};
 
         document.querySelectorAll('#data-entry-fields input').forEach(input => {
             values[input.id] = input.value;
         });
 
-        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${tabName}!A1:append?valueInputOption=USER_ENTERED`, {
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SheetId}/values/${TabName}!A1:append?valueInputOption=USER_ENTERED`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                range: `${tabName}!A1`,
+                range: `${TabName}!A1`,
                 values: [Object.values(values)]
             })
         });
@@ -375,15 +383,15 @@ document.getElementById('saveRow').addEventListener('click', async () => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Error saving data: ${response.status} ${response.statusText}\n${errorText}`);
-            showMessage('Error saving data', true);
+            ShowMessage('Error saving data', true);
             throw new Error(`Error saving data: ${response.status} ${response.statusText}`);
         }
 
-        showMessage('Data saved successfully!');
+        ShowMessage('Data saved successfully!');
         clearInputFields(); 
     } catch (error) {
         console.error("Error saving data:", error);
-        showMessage(`Error saving data: ${error.message}`, true);
+        ShowMessage(`Error saving data: ${error.message}`, true);
     }
 });
 
@@ -404,11 +412,13 @@ document.getElementById('logoutButton').addEventListener('click', async () => {
                 .then(response => {
                     if (response.ok) {
                         console.log('Access revoked from Google');
-                        showMessage('Logged out successfully.');
+                        ShowMessage('Logged out successfully.');
 
                         localStorage.removeItem('selectedSheet');
                         localStorage.removeItem('selectedTab');
                         localStorage.removeItem('dataEntryValues');
+                        localStorage.removeItem('cachedSheets');
+                        clearSheetCaches();
                         document.getElementById('data-entry-fields').innerHTML = '';
                         
                         document.getElementById('sheet-dropdown').style.display = 'none';
@@ -419,17 +429,17 @@ document.getElementById('logoutButton').addEventListener('click', async () => {
 
                         localStorage.setItem('isLoggedOut', 'true');
                     } else {
-                        showMessage('Failed to revoke access from Google.', true);
+                        ShowMessage('Failed to revoke access from Google.', true);
                     }
                 })
                 .catch(error => {
                     console.error('Error revoking access:', error);
-                    showMessage('Error revoking access.', true);
+                    ShowMessage('Error revoking access.', true);
                 });
             });
         } else {
             console.error('No token found to revoke.');
-            showMessage('Error logging out.', true);
+            ShowMessage('Error logging out.', true);
         }
     });
 });
@@ -438,10 +448,10 @@ document.getElementById('loginButton').addEventListener('click', async () => {
     try {
         const token = await getOAuthToken(true); 
         if (!token) {
-            showMessage('Unable to obtain OAuth token', true);
+            ShowMessage('Unable to obtain OAuth token', true);
             throw new Error('OAuth token not obtained');
         }
-        showMessage('Logged in successfully!');
+        ShowMessage('Logged in successfully!');
 
         localStorage.removeItem('isLoggedOut');
 
@@ -458,7 +468,7 @@ document.getElementById('loginButton').addEventListener('click', async () => {
 
         if (sheets.length === 0) {
             dropdown.style.display = 'none';
-            showMessage('No Google Sheets files found in your Drive.', true);
+            ShowMessage('No Google Sheets files found in your Drive.', true);
         } else {
             dropdown.style.display = 'block'; 
             sheets.forEach(sheet => {
@@ -484,6 +494,6 @@ document.getElementById('loginButton').addEventListener('click', async () => {
         }
     } catch (error) {
         console.error("Error logging in:", error);
-        showMessage(`Error logging in: ${error.message}`, true);
+        ShowMessage(`Error logging in: ${error.message}`, true);
     }
 });
