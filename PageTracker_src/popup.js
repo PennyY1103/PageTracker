@@ -278,7 +278,7 @@ async function populateTabs(SheetId, savedTab = null) {
         const token = await getOAuthToken(true); 
 
         const tabs = await fetchAllTabs(token, SheetId);
-        const tabDropdown = document.getElementById('tab-dropdown');
+        const tabDropdown = document.getElementById('tab-list');
         tabDropdown.innerHTML = ''; 
 
         if (tabs.length === 0) {
@@ -326,11 +326,11 @@ document.getElementById('sheet-list').addEventListener('change', async () => {
     SaveSelectedSheetAndTab(SheetId, null); 
 });
 
-document.getElementById('tab-dropdown').addEventListener('change', async () => {
+document.getElementById('tab-list').addEventListener('change', async () => {
     try {
         const token = await getOAuthToken(true); 
         const SheetId = document.getElementById('sheet-list').value;
-        const TabName = document.getElementById('tab-dropdown').value;
+        const TabName = document.getElementById('tab-list').value;
 
         if (!SheetId || !TabName) {
             ShowMessage('Please select both a sheet and a tab.', true);
@@ -361,7 +361,7 @@ document.getElementById('saveRow').addEventListener('click', async () => {
         }
 
         const SheetId = document.getElementById('sheet-list').value;
-        const TabName = document.getElementById('tab-dropdown').value;
+        const TabName = document.getElementById('tab-list').value;
         const values = {};
 
         document.querySelectorAll('#data-entry-fields input').forEach(input => {

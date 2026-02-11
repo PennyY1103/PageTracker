@@ -32,3 +32,5 @@ Driven by the idea of automating the retrieval of Google Sheets files and tabs, 
 - **Custom formatting**: Enable users to define and apply their own conditional formatting rules.
 - **Dynamic sheet IDs**: Allow users to dynamically select and specify sheet IDs, eliminating the need for hard-coded values.
 - **File and sheet creation**: Add functionality for users to create new Google Sheets files and add new sheets with custom titles directly from the extension.
+  
+  
